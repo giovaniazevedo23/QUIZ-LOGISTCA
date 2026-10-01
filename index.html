@@ -94,14 +94,9 @@
       .dashboard-summary { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 20px; }
       .summary-chip { padding: 8px 11px; border: 1px solid #eae8f2; border-radius: 9px; background: #faf9fc; color: #66647a; font-size: 11px; }
       .summary-chip strong { color: #302d4a; }
-      .sheet-connection { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px; margin-bottom: 20px; padding: 15px; border: 1px solid #e8e5f3; border-radius: 13px; background: #faf9ff; }
-      .sheet-connection label { display: block; margin-bottom: 7px; color: #38354e; font-size: 12px; font-weight: 850; }
-      .sheet-connection p { margin: 5px 0 0; color: #777488; font-size: 10px; line-height: 1.5; }
-      .sheet-url-field { min-width: 0; }
-      .sheet-url-field input { width: 100%; min-width: 0; padding: 11px 12px; border: 1px solid #d9d6e7; border-radius: 9px; color: #25233e; }
-      .sheet-status { grid-column: 1 / -1; min-height: 16px; margin: 0 !important; color: #5d5780 !important; font-size: 11px !important; }
-      .sheet-status.error { color: #ba1e3e !important; }
-      .sheet-status.success { color: #187845 !important; }
+      .connection-indicator { font-size: 11px !important; font-weight: 750; }
+      .connection-indicator.error { color: #ba1e3e !important; }
+      .connection-indicator.success { color: #187845 !important; }
       .module-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
       .module-card { min-width: 0; overflow: hidden; border: 1px solid #e9e7f0; border-radius: 15px; background: #fff; box-shadow: 0 5px 17px #231b4210; }
       .module-visual { position: relative; display: grid; height: 118px; place-items: center; overflow: hidden; background: linear-gradient(135deg, #f0edff, #eef7fb); }
@@ -334,16 +329,6 @@
             <span class="summary-chip">Rota: <strong>Teresina → Parnaíba</strong></span>
           </div>
 
-          <form class="sheet-connection" id="sheet-connection-form">
-            <div class="sheet-url-field">
-              <label for="apps-script-url">Conectar ao banco compartilhado Google Sheets</label>
-              <input id="apps-script-url" type="url" inputmode="url" placeholder="Cole aqui a URL /exec do Web App do Apps Script">
-                <p>Depois de implantar o Apps Script como Web App, cole aqui a URL terminada em <strong>/exec</strong>. Ela será guardada neste navegador. As respostas são gravadas a cada escolha e o ranking compartilhado atualiza automaticamente.</p>
-            </div>
-            <button class="secondary" type="submit">Conectar planilha</button>
-            <p class="sheet-status" id="sheet-status" role="status">Sem conexão: os resultados ficam somente neste navegador até conectar a planilha.</p>
-          </form>
-
           <div class="module-grid">
             <article class="module-card">
               <div class="module-visual">
@@ -496,7 +481,7 @@
             <p class="form-error" id="form-error" role="alert"></p>
           </div>
           <div class="dashboard-ranking">
-            <div class="section-heading"><h2>🏅 Ranking de pilotos</h2><span id="ranking-source">Ranking deste navegador</span></div>
+            <div class="section-heading"><h2>🏅 Ranking de pilotos</h2><span class="connection-indicator" id="ranking-source" role="status">Carregando ranking</span></div>
             <div class="leaderboard" id="home-ranking"></div>
             <p class="storage-note" id="storage-note" role="status"></p>
           </div>
@@ -536,7 +521,7 @@
             <div class="podium" id="podium"></div>
             <h2 class="podium-title">📊 Ranking geral</h2>
             <div class="leaderboard rank-list" id="final-ranking"></div>
-            <p class="report-note" id="report-storage-note">Conecte o Web App do Apps Script para compartilhar os resultados na planilha entre os participantes.</p>
+            <p class="report-note" id="report-storage-note">As respostas da partida são sincronizadas com a planilha compartilhada.</p>
             <div class="result-actions">
               <button class="primary" id="replay-button" type="button">Jogar outra vez</button>
               <button class="secondary" id="home-button" type="button">Voltar ao início</button>
@@ -549,7 +534,6 @@
 
     <script>
       const RANKING_KEY = "general-route-ranking-v1";
-      const SHEETS_URL_KEY = "general-apps-script-url-v1";
       const DEFAULT_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3HqpN9pC5gF5xeYjYLy3dTRAsB0k3U8RFJChULSOlry_SiTi01z9LfI5zE5wZrUu9AQ/exec";
       const answersStyle = ["shape-red", "shape-blue", "shape-yellow", "shape-green"];
       const answerShapes = ["▲", "◆", "●", "■"];
@@ -671,9 +655,14 @@
       }
 
       function setSheetStatus(message, stateName = "") {
-        const status = document.querySelector("#sheet-status");
-        status.textContent = message;
-        status.className = `sheet-status ${stateName}`.trim();
+        const status = document.querySelector("#ranking-source");
+        status.textContent = stateName === "error"
+          ? "Falha na sincronização"
+          : stateName === "success"
+            ? "Ranking compartilhado"
+            : "Carregando ranking";
+        status.className = `connection-indicator ${stateName}`.trim();
+        status.title = message;
         document.querySelector("#report-storage-note").textContent = message;
       }
 
@@ -742,7 +731,8 @@
           throw new Error("A resposta do Apps Script não contém o ranking.");
         }
         state.sharedRankings = response.leaderboard;
-        document.querySelector("#ranking-source").textContent = "Ranking compartilhado pela planilha";
+        document.querySelector("#ranking-source").textContent = "Ranking compartilhado";
+        document.querySelector("#ranking-source").className = "connection-indicator success";
         renderRanking("#home-ranking", 5);
         renderRanking("#final-ranking", 10);
         renderPodium();
@@ -770,9 +760,7 @@
 
       function loadSavedAppsScriptUrl() {
         try {
-          const savedUrl = localStorage.getItem(SHEETS_URL_KEY) || DEFAULT_APPS_SCRIPT_URL;
-          state.appsScriptUrl = validateAppsScriptUrl(savedUrl);
-          document.querySelector("#apps-script-url").value = state.appsScriptUrl;
+          state.appsScriptUrl = validateAppsScriptUrl(DEFAULT_APPS_SCRIPT_URL);
           setSheetStatus("Testando acesso à planilha compartilhada…");
           refreshSharedRanking()
             .then((response) => {
@@ -781,14 +769,13 @@
             })
             .catch((error) => {
               state.sharedRankings = null;
-              document.querySelector("#ranking-source").textContent = "Ranking deste navegador";
               setSheetStatus(
                 `Falha ao conectar: ${error.message} Verifique se o Web App está implantado com acesso “Qualquer pessoa”.`,
                 "error"
               );
             });
         } catch (error) {
-          setSheetStatus(`Não foi possível carregar a URL salva: ${error.message}`, "error");
+          setSheetStatus(`Não foi possível conectar ao ranking compartilhado: ${error.message}`, "error");
         }
       }
 
@@ -1152,42 +1139,6 @@
       document.querySelector("#dashboard-button").addEventListener("click", () => {
         setScreen("dashboard");
         document.querySelector("#player-name").focus({ preventScroll: true });
-      });
-
-      document.querySelector("#sheet-connection-form").addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const input = document.querySelector("#apps-script-url");
-        let url;
-        try {
-          url = validateAppsScriptUrl(input.value.trim());
-        } catch (error) {
-          state.appsScriptUrl = "";
-          state.sharedRankings = null;
-          setSheetStatus(error.message, "error");
-          return;
-        }
-
-        state.appsScriptUrl = url;
-        state.sharedRankings = null;
-        setSheetStatus("Testando conexão com o Apps Script…");
-        try {
-          localStorage.setItem(SHEETS_URL_KEY, url);
-        } catch (error) {
-          setSheetStatus(`A conexão ficará ativa somente nesta sessão; não consegui salvar a URL no navegador: ${error.message}`, "error");
-        }
-
-        try {
-          const response = await refreshSharedRanking();
-          startSharedRankingPolling();
-          setSheetStatus(`Planilha conectada. ${response.leaderboard.length} resultados concluídos carregados no ranking compartilhado.`, "success");
-        } catch (error) {
-          state.sharedRankings = null;
-          document.querySelector("#ranking-source").textContent = "Ranking deste navegador";
-          setSheetStatus(
-            `Falha ao conectar: ${error.message} Verifique se o Web App está implantado com acesso “Qualquer pessoa”.`,
-            "error"
-          );
-        }
       });
 
       document.querySelector("#next-button").addEventListener("click", () => {
