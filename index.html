@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#24115b">
+    <title>Desafios Reais da Distribuição — Quiz Logístico</title>
+    <style>
+      :root {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #202039;
+        background: #17142f;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        --purple: #6c4bdf;
+        --muted: #74738a;
+        --red: #e91d4e;
+        --blue: #176bd1;
+        --yellow: #e5a900;
+        --green: #268c23;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+        background:
+          radial-gradient(ellipse at 12% 8%, rgba(110, 73, 231, .3), transparent 38%),
+          radial-gradient(ellipse at 92% 82%, rgba(25, 164, 180, .17), transparent 34%),
+          #17142f;
+      }
+
+      button, input { font: inherit; }
+      button { cursor: pointer; }
+
+      .shell { width: min(1160px, calc(100% - 36px)); min-height: 100vh; margin: auto; display: flex; flex-direction: column; }
+      header { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 22px 0; color: #fff; }
+      .brand { display: flex; align-items: center; gap: 11px; font-size: 14px; font-weight: 900; letter-spacing: .1em; }
+      .brand-mark { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid rgba(255,255,255,.2); border-radius: 13px; background: linear-gradient(145deg, #9675ff, #5735d2); box-shadow: 0 8px 24px #5735d255; font-size: 21px; }
+      .brand small { display: block; margin-top: 3px; color: #b9b3d4; font-size: 9px; letter-spacing: .2em; }
+      .route-chip { padding: 9px 13px; border: 1px solid #ffffff24; border-radius: 99px; color: #dedaf0; font-size: 12px; font-weight: 700; }
+      main { flex: 1; display: grid; align-items: center; padding: 8px 0 30px; }
+      .screen { display: none; width: 100%; }
+      .screen.active { display: block; animation: appear .25s ease-out; }
+      body.cover-mode { background: #fff; }
+      body.cover-mode .shell { width: 100%; }
+      body.cover-mode header, body.cover-mode footer { display: none; }
+      body.cover-mode main { min-height: 100vh; padding: 0; }
+      .cover.screen.active { display: grid; }
+      .cover {
+        position: relative;
+        min-height: 100vh;
+        overflow: hidden;
+        align-items: center;
+        padding: clamp(34px, 8vw, 105px) clamp(28px, 5.2vw, 72px);
+        background: #fff;
+        color: #0d0d16;
+      }
+      .cover-copy { position: relative; z-index: 2; width: min(63%, 720px); }
+      .cover-title-frame { position: relative; display: inline-block; padding: 8px 9px 0; border: 3px solid #9552ff; }
+      .cover-title { margin: 0; color: #2935bc; font-size: clamp(64px, 13vw, 170px); font-weight: 1000; line-height: .78; letter-spacing: -.085em; }
+      .cover-subtitle { margin: -4px 0 25px 7px; color: #08080b; font-size: clamp(40px, 8vw, 98px); font-weight: 1000; line-height: .92; letter-spacing: -.075em; }
+      .cover-byline { margin: 0 0 48px 8px; font-size: 11px; font-weight: 650; letter-spacing: .06em; }
+      .cover-start { min-height: 48px; margin-left: 8px; padding: 0 17px; border: 0; background: #999bff; color: #fff; font-size: 12px; font-weight: 900; transition: background .16s, transform .16s; }
+      .cover-start:hover { transform: translateY(-2px); background: #6e5be7; }
+      .cover-art { position: absolute; top: 0; right: 0; width: 44%; height: 100%; overflow: hidden; background: linear-gradient(135deg, #eef0ff 0 29%, #303ec4 29% 100%); clip-path: polygon(34% 0, 100% 0, 100% 100%, 0 100%, 45% 57%, 17% 38%); }
+      .cover-art svg { position: absolute; right: -2%; bottom: 2%; width: min(100%, 640px); height: 78%; filter: drop-shadow(0 24px 30px #14113b40); }
+      .cover-corner { position: absolute; top: 0; right: 5%; width: 30%; height: 22%; background: #999bff; clip-path: polygon(0 0, 100% 0, 49% 100%); }
+      .cover-art-label { position: absolute; right: 5%; bottom: 5%; z-index: 1; color: #fff; font-size: 10px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; }
+      .panel { width: 100%; padding: clamp(22px, 4vw, 42px); border: 1px solid #ffffff1c; border-radius: 24px; background: rgba(255,255,255,.97); box-shadow: 0 28px 90px #05031280; }
+      .center { max-width: 760px; margin: 0 auto; text-align: center; }
+      .eyebrow { color: var(--purple); font-size: 11px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; }
+      h1 { margin: 12px 0; font-size: clamp(34px, 6vw, 58px); line-height: 1.04; letter-spacing: -.055em; }
+      .lead { max-width: 670px; margin: 13px auto 0; color: #66657a; font-size: 16px; line-height: 1.7; }
+      .intro-title span { color: var(--purple); }
+      .stats { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 24px 0; }
+      .stat { min-width: 122px; padding: 12px 16px; border: 1px solid #e9e7f2; border-radius: 13px; background: #f8f7fc; }
+      .stat strong { display: block; color: #272444; font-size: 18px; }
+      .stat span { color: var(--muted); font-size: 11px; }
+      .player-form { display: flex; max-width: 510px; gap: 10px; margin: 0 auto; }
+      .player-form input { min-width: 0; flex: 1; padding: 14px 15px; border: 1px solid #d9d6e7; border-radius: 12px; outline: none; color: #25233e; }
+      .player-form input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px #6c4bdf20; }
+      .primary { min-height: 49px; padding: 0 21px; border: 0; border-radius: 12px; background: linear-gradient(100deg, #7958ea, #5937cf); box-shadow: 0 8px 20px #5d3ad333; color: #fff; font-weight: 850; transition: transform .16s, filter .16s; }
+      .primary:hover { transform: translateY(-1px); filter: brightness(1.07); }
+      .primary:focus-visible, .answer:focus-visible, input:focus-visible { outline: 3px solid #39219a; outline-offset: 3px; }
+      .dashboard-panel { padding: clamp(20px, 3.5vw, 38px); }
+      .dashboard-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+      .dashboard-heading h1 { max-width: 760px; margin: 8px 0; color: #252344; font-size: clamp(25px, 4vw, 43px); letter-spacing: -.045em; }
+      .dashboard-heading h1 span { color: var(--purple); }
+      .dashboard-subtitle { margin: 0; color: #69677b; font-size: 12px; font-weight: 850; letter-spacing: .12em; }
+      .dashboard-route { flex: 0 0 auto; padding: 10px 13px; border-radius: 12px; background: #f0edff; color: #513bb5; font-size: 12px; font-weight: 850; }
+      .dashboard-summary { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 20px; }
+      .summary-chip { padding: 8px 11px; border: 1px solid #eae8f2; border-radius: 9px; background: #faf9fc; color: #66647a; font-size: 11px; }
+      .summary-chip strong { color: #302d4a; }
+      .module-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
+      .module-card { min-width: 0; overflow: hidden; border: 1px solid #e9e7f0; border-radius: 15px; background: #fff; box-shadow: 0 5px 17px #231b4210; }
+      .module-visual { position: relative; display: grid; height: 118px; place-items: center; overflow: hidden; background: linear-gradient(135deg, #f0edff, #eef7fb); }
+      .module-card:nth-child(2) .module-visual { background: linear-gradient(135deg, #fff5df, #eff4ff); }
+      .module-card:nth-child(3) .module-visual { background: linear-gradient(135deg, #eaf3ff, #f3efff); }
+      .module-card:nth-child(4) .module-visual { background: linear-gradient(135deg, #fff0ed, #fff8e8); }
+      .module-card:nth-child(5) .module-visual { background: linear-gradient(135deg, #eeeaff, #eaf5ff); }
+      .module-card:nth-child(6) .module-visual { background: linear-gradient(135deg, #e8fbf3, #eff3ff); }
+      .module-visual svg { width: 180px; height: 104px; }
+      .module-number { position: absolute; top: 9px; left: 10px; display: grid; width: 25px; height: 25px; place-items: center; border-radius: 8px; background: #fff; color: #5540bb; font-size: 11px; font-weight: 950; box-shadow: 0 2px 8px #24174414; }
+      .module-body { padding: 13px; }
+      .module-body h2 { min-height: 37px; margin: 0 0 9px; color: #2a2841; font-size: 14px; line-height: 1.35; }
+      .module-data { min-height: 42px; margin: 0 0 10px; color: #68667a; font-size: 11px; line-height: 1.5; }
+      .module-data strong { color: #38354e; }
+      .module-command { margin: 0; padding: 10px; border-radius: 9px; background: #f3f1fb; color: #4b3a9c; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 10px; font-weight: 850; line-height: 1.55; }
+      .module-command span { display: block; margin-bottom: 4px; color: #858198; font-family: inherit; font-size: 9px; letter-spacing: .1em; }
+      .dashboard-launch { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 20px; margin-top: 22px; padding: 18px; border-radius: 15px; background: linear-gradient(110deg, #f2efff, #f3f8ff); }
+      .dashboard-launch h2 { margin: 0 0 4px; color: #29263f; font-size: 17px; }
+      .dashboard-launch p { margin: 0; color: #777488; font-size: 11px; line-height: 1.5; }
+      .launch-controls { display: flex; gap: 9px; }
+      .launch-controls .player-form { max-width: none; margin: 0; }
+      .dashboard-player-form input { width: 205px; }
+      .dashboard-ranking { margin-top: 19px; }
+      .dashboard-ranking .section-heading { max-width: none; margin-top: 0; }
+      .hint { margin: 11px 0 0; color: var(--muted); font-size: 11px; }
+      .form-error { min-height: 20px; margin: 8px 0 0; color: #ba1e3e; font-size: 13px; font-weight: 700; }
+      .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 12px; margin: 30px auto 10px; max-width: 720px; text-align: left; }
+      .section-heading h2 { margin: 0; color: #25233e; font-size: 17px; }
+      .section-heading span { color: var(--muted); font-size: 11px; }
+      .leaderboard { max-width: 720px; margin: 0 auto; text-align: left; }
+      .leader-empty { padding: 14px; border: 1px dashed #d8d5e6; border-radius: 12px; color: var(--muted); font-size: 13px; text-align: center; }
+      .rank-row { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto auto; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid #efedf5; }
+      .rank-row:last-child { border-bottom: 0; }
+      .rank-place { font-size: 18px; text-align: center; }
+      .rank-name { overflow: hidden; color: #2c2a43; font-size: 14px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+      .rank-sub { color: var(--muted); font-size: 10px; }
+      .rank-score { color: #4931b2; font-weight: 900; white-space: nowrap; }
+      .rank-percent { color: var(--muted); font-size: 11px; white-space: nowrap; }
+      .storage-note { min-height: 16px; margin: 10px auto 0; color: #9b2941; font-size: 11px; }
+
+      .question-card { padding: 0; overflow: hidden; border-radius: 18px; background: #f4f4f5; }
+      .question-top { position: relative; padding: 22px clamp(18px, 4vw, 48px) 17px; background: #fff; text-align: center; }
+      .question-counter { color: #6f6d7e; font-size: 12px; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+      .question-top h1 { max-width: 950px; margin: 9px auto 0; font-size: clamp(21px, 3vw, 34px); letter-spacing: -.035em; }
+      .question-meta { display: flex; justify-content: space-between; gap: 10px; padding: 10px clamp(18px, 3vw, 28px); border-top: 1px solid #e8e8eb; background: #fff; color: #777586; font-size: 12px; font-weight: 750; }
+      .event-label { color: var(--purple); }
+      .answer-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; padding: 7px; }
+      .answer { position: relative; display: flex; align-items: center; gap: 14px; min-height: 90px; padding: 16px 19px; border: 2px solid transparent; border-radius: 5px; color: #fff; font-size: clamp(14px, 1.7vw, 17px); font-weight: 800; line-height: 1.42; text-align: left; transition: filter .15s, transform .15s, opacity .15s; }
+      .answer:hover:not(:disabled) { z-index: 1; transform: scale(1.012); filter: brightness(1.07); }
+      .answer:disabled { cursor: default; }
+      .answer.shape-red { background: var(--red); }
+      .answer.shape-blue { background: var(--blue); }
+      .answer.shape-yellow { background: var(--yellow); }
+      .answer.shape-green { background: var(--green); }
+      .shape { display: grid; flex: 0 0 35px; width: 35px; height: 35px; place-items: center; color: #fff; font-size: 26px; line-height: 1; }
+      .answer.correct { border-color: #123c25; box-shadow: inset 0 0 0 2px #fff; }
+      .answer.incorrect { opacity: .55; }
+      .answer .answer-label { display: block; margin-bottom: 3px; font-size: 10px; letter-spacing: .14em; opacity: .83; }
+      .feedback { display: none; margin: 3px 7px 7px; padding: 16px 18px; border-radius: 5px; background: #fff; }
+      .feedback.visible { display: block; animation: appear .2s ease-out; }
+      .feedback-title { margin: 0 0 5px; font-weight: 900; }
+      .feedback-title.good { color: #187845; }
+      .feedback-title.bad { color: #b21c3d; }
+      .feedback-text { margin: 0; color: #575568; font-size: 14px; line-height: 1.6; }
+      .next-wrap { display: flex; justify-content: flex-end; margin: 0 7px 7px; }
+      .quiz-foot { display: flex; justify-content: space-between; gap: 12px; padding: 0 10px 12px; color: #747282; font-size: 11px; }
+
+      .results-panel { padding: 0; overflow: hidden; }
+      .result-hero { padding: 29px 24px; background: linear-gradient(115deg, #27155e, #5d36c1 62%, #2a899e); color: #fff; text-align: center; }
+      .result-hero .eyebrow { color: #d1c5ff; }
+      .result-hero h1 { margin: 8px 0; font-size: clamp(30px, 5vw, 46px); }
+      .result-hero p { margin: 0; color: #e1dcf7; }
+      .result-score { margin: 12px 0 2px; font-size: clamp(39px, 7vw, 58px); font-weight: 950; letter-spacing: -.06em; }
+      .result-content { padding: clamp(18px, 3vw, 30px); }
+      .report-title { margin: 0 0 7px; color: #29273f; font-size: 22px; }
+      .report-intro { margin: 0 0 20px; color: #6c6a7e; font-size: 13px; line-height: 1.65; }
+      .report-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; margin-bottom: 25px; }
+      .summary-item { padding: 13px; border: 1px solid #e8e6f0; border-radius: 12px; background: #faf9fc; }
+      .summary-item strong { display: block; color: #30274c; font-size: 20px; }
+      .summary-item span { color: var(--muted); font-size: 10px; }
+      .report-events { display: grid; gap: 11px; }
+      .report-event { padding: 16px; border: 1px solid #e9e7f0; border-left: 4px solid var(--purple); border-radius: 12px; background: #fff; }
+      .report-event.good { border-left-color: #21a66e; }
+      .report-event.bad { border-left-color: #e13d5c; }
+      .report-event-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+      .report-event h3 { margin: 0; color: #29273f; font-size: 15px; }
+      .report-outcome { flex: 0 0 auto; padding: 5px 8px; border-radius: 99px; background: #e5f7ef; color: #197b4c; font-size: 10px; font-weight: 900; }
+      .report-event.bad .report-outcome { background: #ffebef; color: #b32641; }
+      .report-event p { margin: 9px 0 0; color: #625f72; font-size: 12px; line-height: 1.65; }
+      .report-event strong { color: #353248; }
+      .podium-title { margin: 29px 0 11px; color: #29273f; font-size: 22px; }
+      .podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 10px; }
+      .podium-card { min-width: 0; padding: 15px 9px; border: 1px solid #e8e5f0; border-radius: 13px 13px 9px 9px; background: #faf9fc; text-align: center; }
+      .podium-card.first { padding-top: 23px; border-color: #e5c95d; background: linear-gradient(#fff9dd, #fff); }
+      .podium-medal { font-size: 26px; }
+      .podium-name { overflow: hidden; margin-top: 5px; color: #2e2b43; font-size: 13px; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+      .podium-points { margin-top: 3px; color: #5740bc; font-size: 12px; font-weight: 900; }
+      .rank-list { max-width: none; border: 1px solid #ebe9f1; border-radius: 12px; }
+      .result-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+      .secondary { min-height: 46px; padding: 0 17px; border: 1px solid #d9d5e7; border-radius: 11px; background: #fff; color: #433c62; font-weight: 800; }
+      .secondary:hover { background: #f7f5fc; }
+      .report-note { margin: 13px 0 0; color: #858295; font-size: 10px; text-align: center; }
+      footer { padding: 0 0 18px; color: #aaa5c0; font-size: 11px; text-align: center; }
+
+      @keyframes appear { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+      @media (max-width: 670px) {
+        .shell { width: min(100% - 20px, 560px); }
+        body.cover-mode .shell { width: 100%; }
+        .cover { min-height: 100vh; align-items: start; padding: 19vh 23px 32px; }
+        .cover-copy { width: 100%; }
+        .cover-title { font-size: clamp(61px, 17vw, 105px); }
+        .cover-subtitle { font-size: clamp(42px, 12vw, 72px); }
+        .cover-byline { margin-bottom: 30px; }
+        .cover-art { top: auto; bottom: 0; width: 58%; height: 35%; opacity: .95; }
+        .cover-art svg { height: 95%; }
+        .cover-art-label { display: none; }
+        header { padding: 15px 0; }
+        .route-chip { max-width: 150px; font-size: 10px; text-align: center; }
+        .player-form { flex-direction: column; }
+        .player-form .primary { width: 100%; }
+        .panel { border-radius: 18px; }
+        .dashboard-heading { display: block; }
+        .dashboard-route { display: inline-block; margin-top: 12px; }
+        .module-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+        .module-visual { height: 95px; }
+        .module-body { padding: 10px; }
+        .module-body h2 { min-height: 0; font-size: 12px; }
+        .module-data { min-height: 0; font-size: 10px; }
+        .module-command { font-size: 9px; }
+        .dashboard-launch { grid-template-columns: 1fr; }
+        .launch-controls .player-form { width: 100%; }
+        .dashboard-player-form input { width: auto; }
+        .question-top { padding-top: 15px; }
+        .question-top h1 { font-size: 22px; }
+        .answer-grid { grid-template-columns: 1fr; }
+        .answer { min-height: 65px; padding: 12px 14px; }
+        .shape { flex-basis: 29px; width: 29px; font-size: 22px; }
+        .quiz-foot { flex-direction: column; }
+        .report-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .rank-row { grid-template-columns: 32px minmax(0, 1fr) auto; gap: 8px; padding: 10px; }
+        .rank-percent { display: none; }
+      }
+      @media (max-width: 420px) {
+        .module-grid { grid-template-columns: 1fr; }
+        .module-visual { height: 112px; }
+        .launch-controls .player-form { flex-direction: column; }
+        .dashboard-player-form input { width: 100%; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      }
+    </style>
+  </head>
+  <body class="cover-mode">
+    <div class="shell">
+      <header>
+        <div class="brand"><span class="brand-mark" aria-hidden="true">🚚</span><span>SOLUÇÃO LOGÍSTICA<small>DESAFIOS REAIS DA DISTRIBUIÇÃO</small></span></div>
+        <div class="route-chip">🚚 Teresina → Parnaíba</div>
+      </header>
+
+      <main>
+        <section class="screen cover active" id="cover" aria-label="Capa da apresentação">
+          <div class="cover-copy">
+            <p class="eyebrow">Apresentação</p>
+            <div class="cover-title-frame"><h1 class="cover-title">SOLUÇÃO</h1></div>
+            <p class="cover-subtitle">LOGÍSTICA</p>
+            <p class="cover-byline">GIOVANI AZEVEDO E LEITE KAED</p>
+            <button class="cover-start" id="presentation-button" type="button">INICIAR APRESENTAÇÃO <span aria-hidden="true">→</span></button>
+          </div>
+          <div class="cover-corner" aria-hidden="true"></div>
+          <div class="cover-art" aria-hidden="true">
+            <svg viewBox="0 0 620 470" role="img">
+              <defs>
+                <linearGradient id="warehouse" x1="0" x2="1" y1="0" y2="1">
+                  <stop offset="0" stop-color="#345044"/>
+                  <stop offset="1" stop-color="#152b2a"/>
+                </linearGradient>
+                <linearGradient id="box" x1="0" x2="0.9" y1="0" y2="1">
+                  <stop offset="0" stop-color="#d4a76c"/>
+                  <stop offset="1" stop-color="#a9753f"/>
+                </linearGradient>
+              </defs>
+              <path d="M89 0h531v376L403 470H0V188z" fill="url(#warehouse)"/>
+              <path d="M432 0h188v258l-188 123z" fill="#273936"/>
+              <path d="M450 18h38v188h-38zm56 0h38v155h-38zm56 0h38v120h-38z" fill="#d6b276" opacity=".48"/>
+              <path d="M453 211l167-110v62L492 260zM423 275l197-130v54L458 331z" fill="#111f20" opacity=".7"/>
+              <path d="M102 306l174-102 183 107-177 108z" fill="url(#box)"/>
+              <path d="M102 306v83l180 81v-91z" fill="#aa7845"/>
+              <path d="M282 379v91l177-105v-54z" fill="#8c6037"/>
+              <path d="M102 306l81-48 180 97-81 49z" fill="#e0b67d"/>
+              <path d="M183 258l48-28 180 98-48 27z" fill="#c7975e"/>
+              <path d="M280 404l22 12v54l-22-10z" fill="#75512f" opacity=".6"/>
+              <path d="M183 258l-1 48 98 51v-48z" fill="#edc994"/>
+              <path d="M230 230l1 48-49 28v-48z" fill="#bc8a54"/>
+              <path d="M90 394c-39-4-72 20-90 53v23h177l-2-31c-23-29-48-42-85-45z" fill="#bd8253"/>
+              <path d="M457 355c44-14 91 8 123 39l40 44v32H431l1-54z" fill="#d0a078"/>
+              <path d="M0 448c42-25 84-34 128-27l49 22v36H0zm431-4c52-29 118-12 189 28v24H431z" fill="#e1b88c"/>
+              <path d="M0 0h620v470H0z" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="3"/>
+            </svg>
+            <span class="cover-art-label">Distribuição · Piauí</span>
+          </div>
+        </section>
+
+        <section class="screen panel center" id="home">
+          <p class="eyebrow">Apresentador · Situação de aprendizagem</p>
+          <h1 class="intro-title">Olá, equipe!</h1>
+          <p class="lead">Vamos simular uma operação real. Nossa transportadora saiu de Teresina com <strong>120 volumes para realizar 15 entregas</strong> no interior do Piauí. Nosso desafio é manter a rastreabilidade e a qualidade das entregas, mesmo com os imprevistos da rota. Peguem seus celulares (Kahoot) e vamos decidir como a nossa <strong>solução logística sistêmica</strong> deve intervir em cada problema!</p>
+          <div class="stats" aria-label="Resumo da operação">
+            <div class="stat"><strong>120 volumes</strong><span>carga inicial</span></div>
+            <div class="stat"><strong>15 entregas</strong><span>rota programada</span></div>
+            <div class="stat"><strong>6 eventos</strong><span>decisões do sistema</span></div>
+          </div>
+          <button class="primary" id="dashboard-button" type="button">VER PAINEL DA OPERAÇÃO <span aria-hidden="true">→</span></button>
+        </section>
+
+        <section class="screen panel dashboard-panel" id="dashboard">
+          <div class="dashboard-heading">
+            <div>
+              <p class="eyebrow">Painel visual da operação</p>
+              <h1>SCRIPT VISUAL: GESTÃO LOGÍSTICA SISTÊMICA <span>— EQUIPE LOGTERESINA</span></h1>
+              <p class="dashboard-subtitle">SITUAÇÃO DE APRENDIZAGEM - DESAFIOS REAIS DA DISTRIBUIÇÃO</p>
+            </div>
+            <div class="dashboard-route">🚚 TERESINA → INTERIOR DO PIAUÍ</div>
+          </div>
+
+          <div class="dashboard-summary" aria-label="Resumo da operação">
+            <span class="summary-chip"><strong>120</strong> volumes</span>
+            <span class="summary-chip"><strong>15</strong> entregas programadas</span>
+            <span class="summary-chip"><strong>6</strong> etapas de controle</span>
+            <span class="summary-chip">Rota: <strong>Teresina → Parnaíba</strong></span>
+          </div>
+
+          <div class="module-grid">
+            <article class="module-card">
+              <div class="module-visual">
+                <span class="module-number">01</span>
+                <svg viewBox="0 0 180 104" aria-hidden="true">
+                  <path d="M15 80h150" stroke="#a8a3bf" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M23 45h83v31H23z" rx="4" fill="#6960d9"/>
+                  <path d="M106 55h30l18 19v2h-48z" fill="#8e85ed"/>
+                  <path d="M119 59h13l12 13h-25z" fill="#dff4ff"/>
+                  <circle cx="50" cy="78" r="9" fill="#302d4d"/><circle cx="50" cy="78" r="4" fill="#fff"/>
+                  <circle cx="130" cy="78" r="9" fill="#302d4d"/><circle cx="130" cy="78" r="4" fill="#fff"/>
+                  <rect x="58" y="18" width="50" height="45" rx="6" fill="#fff" stroke="#b9b1e4" stroke-width="2"/>
+                  <path d="M69 31l4 4 7-8M85 32h13M69 46l4 4 7-8M85 47h13" fill="none" stroke="#46a67b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M12 40h13m-7-7 7 7-7 7" fill="none" stroke="#efac49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="module-body">
+                <h2>SAÍDA: Teresina CD (TMS)</h2>
+                <p class="module-data"><strong>ENTRADA:</strong> Conferência e checklist; lacres e condições do veículo; NF-e, CT-e e MDF-e.</p>
+                <p class="module-command"><span>COMANDO DE SISTEMA</span>BLOQUEIO DE VIAGEM se documentos estiverem pendentes.</p>
+              </div>
+            </article>
+
+            <article class="module-card">
+              <div class="module-visual">
+                <span class="module-number">02</span>
+                <svg viewBox="0 0 180 104" aria-hidden="true">
+                  <path d="M10 83h160" stroke="#a8a3bf" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M18 66h144l-22 18H37z" fill="#555979"/>
+                  <path d="M42 75h15m12 0h15m12 0h15m12 0h15" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M55 37h48v22H55z" fill="#e9a348"/><path d="M61 37l8-14h28l6 14" fill="#f5c46c"/>
+                  <path d="M69 26l7 10m8-10 7 10m8-10 6 10" stroke="#fff7df" stroke-width="3"/>
+                  <rect x="119" y="19" width="40" height="34" rx="5" fill="#fff" stroke="#d1cbe6" stroke-width="2"/>
+                  <circle cx="139" cy="35" r="12" fill="#fff3d8" stroke="#e5a345" stroke-width="3"/>
+                  <path d="M139 27v9l6 4" fill="none" stroke="#d78223" stroke-width="2.5" stroke-linecap="round"/>
+                  <path d="M24 31h23m-10-8 10 8-10 8" fill="none" stroke="#5e69c9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="module-body">
+                <h2>ATRASO NA ROTA (GPS/Rastreamento)</h2>
+                <p class="module-data"><strong>ENTRADA:</strong> Sinal de GPS emitido pelo caminhão; lentidão na BR-316 por obras.</p>
+                <p class="module-command"><span>COMANDO DE SISTEMA</span>DETEÇÃO DE LENTIDÃO e NOTIFICAÇÃO de nova previsão ao CLIENTE e BASE.</p>
+              </div>
+            </article>
+
+            <article class="module-card">
+              <div class="module-visual">
+                <span class="module-number">03</span>
+                <svg viewBox="0 0 180 104" aria-hidden="true">
+                  <path d="M19 78h111" stroke="#a8a3bf" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M29 51l24-14 24 14-24 14z" fill="#e4b77d"/><path d="M29 51v23l24 14V65z" fill="#ba8853"/><path d="M53 65v23l24-14V51z" fill="#a97543"/>
+                  <path d="M76 48l20-12 21 12-21 13z" fill="#efc88f"/><path d="M76 48v21l20 12V61z" fill="#c3925c"/><path d="M96 61v20l21-12V48z" fill="#aa7846"/>
+                  <rect x="128" y="17" width="36" height="53" rx="5" fill="#30354e"/>
+                  <rect x="132" y="22" width="28" height="39" rx="2" fill="#dff6ff"/>
+                  <path d="M137 30h18m-18 5h18m-18 5h18m-18 5h18m-18 5h18" stroke="#2e537a" stroke-width="2"/>
+                  <path d="M127 76l11-14m-4 15 9-14m-2 14 8-12" stroke="#8c69dc" stroke-width="2"/>
+                </svg>
+              </div>
+              <div class="module-body">
+                <h2>DIVERGÊNCIA DE QUANTIDADE (Ocorrência)</h2>
+                <p class="module-data"><strong>ENTRADA:</strong> PEDIDO: 10 volumes. ENCONTRADO: 8 volumes.</p>
+                <p class="module-command"><span>COMANDO DE SISTEMA</span>REGISTRO DE ENTREGA PARCIAL com RESSALVA ELETRÔNICA e ALERTA de investigação.</p>
+              </div>
+            </article>
+
+            <article class="module-card">
+              <div class="module-visual">
+                <span class="module-number">04</span>
+                <svg viewBox="0 0 180 104" aria-hidden="true">
+                  <path d="M22 83h138" stroke="#b9ac9d" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M34 44l30-17 33 18-30 18z" fill="#edc58e"/><path d="M34 44v29l33 17V63z" fill="#c4945d"/><path d="M67 63v27l30-17V45z" fill="#ae7b48"/>
+                  <path d="M65 28l-8 18 11 8-8 11" fill="none" stroke="#d53f4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                  <rect x="113" y="18" width="35" height="62" rx="8" fill="#34374e"/>
+                  <rect x="117" y="24" width="27" height="45" rx="3" fill="#dff5ff"/>
+                  <circle cx="130.5" cy="74" r="2.5" fill="#e9edf6"/>
+                  <circle cx="131" cy="40" r="9" fill="#fff" stroke="#635ad1" stroke-width="2"/>
+                  <path d="M118 60c1-9 7-13 13-13s12 4 13 13" fill="#8ab2e7"/>
+                  <path d="M151 27l5 5 9-11" fill="none" stroke="#38a875" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="module-body">
+                <h2>EMBALAGEM AVARIADA (Gestão de Dano)</h2>
+                <p class="module-data"><strong>ENTRADA:</strong> FOTOS: 2. LAUDO DIGITAL: Gerado. Decisão do cliente registrada.</p>
+                <p class="module-command"><span>COMANDO DE SISTEMA</span>BLOQUEIO DE ENTREGA até envio de fotos, laudo e decisão do cliente.</p>
+              </div>
+            </article>
+
+            <article class="module-card">
+              <div class="module-visual">
+                <span class="module-number">05</span>
+                <svg viewBox="0 0 180 104" aria-hidden="true">
+                  <path d="M14 82h153" stroke="#a8a3bf" stroke-width="3" stroke-linecap="round"/>
+                  <rect x="22" y="30" width="72" height="50" rx="3" fill="#dad8ea"/>
+                  <path d="M18 31l40-19 41 19z" fill="#7770cc"/>
+                  <path d="M32 40h52v34H32z" fill="#878398"/>
+                  <path d="M37 44h42v6H37zm0 11h42v6H37zm0 11h42v5H37z" fill="#d7d3e5"/>
+                  <rect x="39" y="22" width="37" height="17" rx="3" fill="#fff"/>
+                  <text x="57.5" y="34" text-anchor="middle" fill="#d84855" font-size="10" font-weight="900">CLOSED</text>
+                  <path d="M108 55h36l15 16v8h-51z" fill="#4e54b7"/>
+                  <path d="M119 59h17l12 12h-29z" fill="#dff4ff"/>
+                  <circle cx="119" cy="80" r="7" fill="#302d4d"/><circle cx="119" cy="80" r="3" fill="#fff"/>
+                  <circle cx="147" cy="80" r="7" fill="#302d4d"/><circle cx="147" cy="80" r="3" fill="#fff"/>
+                  <path d="M139 15c-9 0-15 6-15 14 0 10 15 23 15 23s15-13 15-23c0-8-6-14-15-14z" fill="#e26b62"/>
+                  <circle cx="139" cy="29" r="5" fill="#fff"/>
+                </svg>
+              </div>
+              <div class="module-body">
+                <h2>CLIENTE AUSENTE (e-POD)</h2>
+                <p class="module-data"><strong>ENTRADA:</strong> GPS: 01°70242.60°. Registro de horário e marcador de tentativa de entrega.</p>
+                <p class="module-command"><span>COMANDO DE SISTEMA</span>COMPROVAÇÃO COM FOTO E GPS; acionamento do SAC para REPROGRAMAÇÃO.</p>
+              </div>
+            </article>
+
+            <article class="module-card">
+              <div class="module-visual">
+                <span class="module-number">06</span>
+                <svg viewBox="0 0 180 104" aria-hidden="true">
+                  <path d="M22 83h137" stroke="#a8b7aa" stroke-width="3" stroke-linecap="round"/>
+                  <circle cx="49" cy="35" r="12" fill="#e9b98f"/>
+                  <path d="M31 76c1-22 5-31 18-31s17 9 18 31z" fill="#5c83c9"/>
+                  <path d="M39 61l17 9 17-11" fill="none" stroke="#e9b98f" stroke-width="7" stroke-linecap="round"/>
+                  <rect x="76" y="28" width="63" height="45" rx="5" fill="#34374e"/>
+                  <rect x="81" y="33" width="53" height="34" rx="2" fill="#f4fbff"/>
+                  <path d="M88 54c10-13 18 9 27-4 4-6 8-7 14-4" fill="none" stroke="#6960d9" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M115 76h-15l-6 7h39l-6-7z" fill="#666b83"/>
+                  <path d="M98 55l7 6 12-16" fill="none" stroke="#39a975" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="153" cy="25" r="12" fill="#e8fbf3"/>
+                  <path d="M147 25l4 4 8-9" fill="none" stroke="#27a06a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="module-body">
+                <h2>ENTREGA REALIZADA (Finalização)</h2>
+                <p class="module-data"><strong>ENTRADA:</strong> e-POD: ASSINATURA DIGITAL, LOCALIZAÇÃO GPS e DATA/HORA.</p>
+                <p class="module-command"><span>COMANDO DE SISTEMA</span>BAIXA IMEDIATA NA BASE, Faturamento e Fechamento do Ciclo de Rastreamento.</p>
+              </div>
+            </article>
+          </div>
+
+          <div class="dashboard-launch">
+            <div>
+              <h2>Pronto para acompanhar a operação?</h2>
+              <p>Informe o nome do participante e abra o jogo de apresentação. Sem limite de tempo.</p>
+            </div>
+            <div class="launch-controls">
+              <form class="player-form dashboard-player-form" id="player-form">
+                <input id="player-name" name="player" maxlength="32" autocomplete="name" placeholder="Nome ou equipe" aria-label="Nome do jogador ou equipe" required>
+                <button class="primary" type="submit">JOGAR APRESENTAÇÃO <span aria-hidden="true">→</span></button>
+              </form>
+            </div>
+            <p class="form-error" id="form-error" role="alert"></p>
+          </div>
+          <div class="dashboard-ranking">
+            <div class="section-heading"><h2>🏅 Ranking de pilotos</h2><span>Melhor pontuação salva neste navegador</span></div>
+            <div class="leaderboard" id="home-ranking"></div>
+            <p class="storage-note" id="storage-note" role="status"></p>
+          </div>
+        </section>
+
+        <section class="screen" id="game" aria-live="polite">
+          <div class="question-card">
+            <div class="question-top">
+              <div class="question-counter" id="question-counter"></div>
+              <h1 id="question-title"></h1>
+            </div>
+            <div class="question-meta"><span class="event-label" id="event-label"></span><span id="route-progress"></span></div>
+            <div class="answer-grid" id="answer-grid"></div>
+            <div class="feedback" id="feedback" role="status">
+              <p class="feedback-title" id="feedback-title"></p>
+              <p class="feedback-text" id="feedback-text"></p>
+            </div>
+            <div class="next-wrap"><button class="primary" id="next-button" type="button" hidden>Próximo evento →</button></div>
+            <div class="quiz-foot"><span id="player-display"></span><span>Atalho: teclas 1 a 3</span></div>
+          </div>
+        </section>
+
+        <section class="screen panel results-panel" id="results" aria-live="polite">
+          <div class="result-hero">
+            <p class="eyebrow">Ciclo da rota encerrado</p>
+            <h1>Relatório da operação</h1>
+            <p id="result-player"></p>
+            <div class="result-score" id="result-score"></div>
+            <p id="result-subtitle"></p>
+          </div>
+          <div class="result-content">
+            <h2 class="report-title">Análise de solução de problemas</h2>
+            <p class="report-intro">Veja como a solução logística interveio em cada etapa da rota e quais controles, previsões e evidências sustentaram a operação.</p>
+            <div class="report-summary" id="report-summary"></div>
+            <div class="report-events" id="report-events"></div>
+            <h2 class="podium-title">🏆 Pódio da operação</h2>
+            <div class="podium" id="podium"></div>
+            <h2 class="podium-title">📊 Ranking geral</h2>
+            <div class="leaderboard rank-list" id="final-ranking"></div>
+            <p class="report-note">O ranking é local deste navegador e dispositivo; não é compartilhado entre jogadores em aparelhos diferentes.</p>
+            <div class="result-actions">
+              <button class="primary" id="replay-button" type="button">Jogar outra vez</button>
+              <button class="secondary" id="home-button" type="button">Voltar ao início</button>
+            </div>
+          </div>
+        </section>
+      </main>
+      <footer>Desafios Reais da Distribuição • Solução Logística Sistêmica</footer>
+    </div>
+
+    <script>
+      const RANKING_KEY = "general-route-ranking-v1";
+      const answersStyle = ["shape-red", "shape-blue", "shape-yellow", "shape-green"];
+      const answerShapes = ["▲", "◆", "●", "■"];
+      const questions = [
+        {
+          event: "🟢 EVENTO 1 · A SAÍDA DO CD EM TERESINA",
+          title: "O caminhão está carregado com 120 volumes para 15 entregas. Como a solução garante uma saída segura e rastreável?",
+          options: [
+            "Emitir um mapa em papel e deixar que o motorista anote numa prancheta que conferiu o caminhão.",
+            "Exigir a validação do checklist do veículo, incluindo lacres e condições, e cruzar NF-e, CT-e e MDF-e antes de registrar o início da viagem no TMS.",
+            "Liberar a saída imediatamente e emitir o CT-e depois, para ganhar tempo."
+          ],
+          correct: 1,
+          explanation: "A solução atua preventivamente: valida a conferência e os documentos fiscais antes de autorizar o início da viagem no TMS. O registro marca o momento zero da operação, fortalece a rastreabilidade e reduz o risco de retenção por irregularidade documental.",
+          learning: "Prevenção, checklist de carga e veículo, conformidade documental e início rastreável da viagem.",
+          measure: "Registrar o checklist, a validação de NF-e, CT-e e MDF-e e o horário de início no TMS; medir o transit time a partir da liberação."
+        },
+        {
+          event: "🟡 EVENTO 2 · ATRASO NA ROTA · BR-316",
+          title: "Obras na BR-316 provocaram trânsito lento e um atraso estimado de 1h30. Como a solução resolve a quebra de expectativa do cliente?",
+          options: [
+            "Detectar o atraso pelo GPS, recalcular o impacto no lead time e notificar automaticamente o cliente e a base sobre a nova previsão de chegada.",
+            "Bloquear a tela do aplicativo do motorista até que ele recupere o tempo perdido acelerando.",
+            "Registrar o atraso apenas internamente e não avisar o cliente para evitar preocupação."
+          ],
+          correct: 0,
+          explanation: "O rastreamento transforma um imprevisto físico em comunicação proativa: atualiza o lead time e a previsão de chegada e informa o cliente e a base. Atrasos acontecem; deixar o cliente sem informação prejudica a confiança e o nível de serviço.",
+          learning: "Gestão de risco, previsão dinâmica e comunicação proativa com o cliente.",
+          measure: "Comparar a previsão original e a atualizada; registrar o horário da notificação e acompanhar o efeito no lead time, na janela de entrega e no nível de serviço."
+        },
+        {
+          event: "🟠 EVENTO 3 · DIVERGÊNCIA DE QUANTIDADE",
+          title: "Para um cliente, o sistema indica 10 volumes, mas o motorista encontra apenas 8 no baú. Qual etapa da solução resolve a divergência na hora?",
+          options: [
+            "Cancelar toda a nota fiscal e retornar com a carga para Teresina.",
+            "Registrar a entrega parcial dos 8 volumes com ressalva eletrônica e alertar a base para investigar onde ficaram os 2 volumes faltantes.",
+            "Pedir ao cliente que assine confirmando o recebimento dos 10 volumes para coincidir com o sistema."
+          ],
+          correct: 1,
+          explanation: "A solução combina flexibilidade e controle: permite concluir a parte disponível do pedido e registra oficialmente a falta, sem alterar ou apagar o histórico. A base recebe um alerta para verificar se os volumes ficaram no CD, foram entregues a outro cliente ou se houve falha em outra etapa.",
+          learning: "Entrega parcial com ressalva, auditoria da divergência e análise de causa raiz.",
+          measure: "Preservar as quantidades previstas e entregues, a ressalva e o protocolo de investigação; documentar a causa identificada e a ação corretiva."
+        },
+        {
+          event: "🔴 EVENTO 4 · EMBALAGEM AVARIADA",
+          title: "Durante a descarga, um volume apresenta a embalagem rasgada ou amassada. Qual procedimento a solução exige para controlar a ocorrência?",
+          options: [
+            "Orientar o motorista a passar fita adesiva e entregar rapidamente.",
+            "Bloquear a conclusão da entrega até que o motorista fotografe a avaria no aplicativo, registre um laudo preliminar e informe se o cliente recusa ou recebe com ressalva.",
+            "Deixar o produto de graça para o cliente como pedido de desculpas."
+          ],
+          correct: 1,
+          explanation: "A solução atua como auditora visual: exige evidências e registra o laudo e a decisão do cliente antes de concluir a ocorrência. A coleta no local ajuda a investigar em que etapa houve o dano e fornece documentação para análise interna e eventual avaliação securitária.",
+          learning: "Gestão padronizada de ocorrências, evidências visuais e apuração da origem da avaria.",
+          measure: "Associar fotos, horário, localização, laudo preliminar e decisão do cliente ao volume; acompanhar a apuração e as ações de prevenção."
+        },
+        {
+          event: "🟣 EVENTO 5 · CLIENTE AUSENTE",
+          title: "O caminhão chegou no horário previsto, mas o cliente não estava no local. Como a solução registra a tentativa e encaminha a próxima ação?",
+          options: [
+            "Captar o GPS, exigir uma foto da fachada fechada, registrar a tentativa e acionar o SAC para reprogramar a entrega.",
+            "Deixar a carga na calçada e registrar a entrega como concluída.",
+            "Marcar como não entregue sem qualquer comprovação e encerrar a rota."
+          ],
+          correct: 0,
+          explanation: "O GPS e a foto da fachada comprovam que a equipe esteve no endereço, sem registrar falsamente uma entrega concluída. A ocorrência documenta a tentativa e aciona o SAC para combinar o reagendamento, evitando espera improdutiva e disputas sobre a visita.",
+          learning: "Prova de serviço, tentativa de entrega, indicador First Attempt Delivery (FAD) e reagendamento pelo SAC.",
+          measure: "Registrar GPS, foto e horário da tentativa; acompanhar o FAD, o custo da reentrega e o tempo até o reagendamento."
+        },
+        {
+          event: "🔵 EVENTO 6 · ENTREGA REALIZADA · FINALIZAÇÃO",
+          title: "A entrega final foi concluída com sucesso. Qual tecnologia garante uma baixa com informação confiável e rastreável?",
+          options: [
+            "Ligar para a central e avisar que a operação terminou.",
+            "Usar o e-POD no aplicativo para coletar assinatura digital, foto do local, data, horário e GPS exato.",
+            "Guardar somente o canhoto em papel e digitar os dados no sistema três dias depois."
+          ],
+          correct: 1,
+          explanation: "O e-POD digitaliza o encerramento da entrega e registra os dados no sistema, em vez de depender de um canhoto digitado posteriormente. A informação confiável permite comparar o planejado com o executado, dar visibilidade ao embarcador e seguir o fluxo de faturamento do frete.",
+          learning: "e-POD, baixa digital em tempo real e rastreabilidade de ponta a ponta.",
+          measure: "Validar assinatura, foto do local, data, horário e GPS; auditar o planejado versus executado e acompanhar o tempo entre entrega, baixa e faturamento."
+        }
+      ];
+
+      const state = {
+        player: "",
+        current: 0,
+        score: 0,
+        answered: false,
+        events: [],
+        rankings: [],
+        storageAvailable: true
+      };
+
+      const screens = {
+        cover: document.querySelector("#cover"),
+        home: document.querySelector("#home"),
+        dashboard: document.querySelector("#dashboard"),
+        game: document.querySelector("#game"),
+        results: document.querySelector("#results")
+      };
+
+      function setScreen(name) {
+        Object.entries(screens).forEach(([key, screen]) => {
+          screen.classList.toggle("active", key === name);
+        });
+        document.body.classList.toggle("cover-mode", name === "cover");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function setStorageStatus(message) {
+        document.querySelector("#storage-note").textContent = message;
+      }
+
+      function loadRankings() {
+        try {
+          const stored = localStorage.getItem(RANKING_KEY);
+          if (stored === null) return [];
+          const parsed = JSON.parse(stored);
+          if (!Array.isArray(parsed) || parsed.some((entry) =>
+            typeof entry.name !== "string" ||
+            !Number.isFinite(entry.score) ||
+            !Number.isFinite(entry.correct) ||
+            typeof entry.playedAt !== "string"
+          )) {
+            throw new Error("Formato de ranking inválido.");
+          }
+          return parsed;
+        } catch (error) {
+          state.storageAvailable = false;
+          setStorageStatus(`Não foi possível ler o ranking salvo: ${error.message}`);
+          return [];
+        }
+      }
+
+      function sortedRankings() {
+        return [...state.rankings].sort((a, b) =>
+          b.score - a.score || b.correct - a.correct || a.playedAt.localeCompare(b.playedAt)
+        );
+      }
+
+      function createRankRow(entry, index) {
+        const row = document.createElement("div");
+        row.className = "rank-row";
+        const place = document.createElement("span");
+        place.className = "rank-place";
+        place.textContent = ["🥇", "🥈", "🥉"][index] || `${index + 1}º`;
+        const who = document.createElement("div");
+        const name = document.createElement("div");
+        name.className = "rank-name";
+        name.textContent = entry.name;
+        const sub = document.createElement("div");
+        sub.className = "rank-sub";
+        sub.textContent = `${entry.correct}/${questions.length} decisões corretas`;
+        who.append(name, sub);
+        const score = document.createElement("span");
+        score.className = "rank-score";
+        score.textContent = `${entry.score.toLocaleString("pt-BR")} pts`;
+        const percent = document.createElement("span");
+        percent.className = "rank-percent";
+        percent.textContent = `${Math.round(entry.correct / questions.length * 100)}%`;
+        row.append(place, who, score, percent);
+        return row;
+      }
+
+      function renderRanking(target, limit = 10) {
+        const container = document.querySelector(target);
+        container.replaceChildren();
+        const entries = sortedRankings().slice(0, limit);
+        if (entries.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "leader-empty";
+          empty.textContent = "Ainda não há pontuações. Faça a primeira rota e entre para o ranking!";
+          container.append(empty);
+          return entries;
+        }
+        entries.forEach((entry, index) => container.append(createRankRow(entry, index)));
+        return entries;
+      }
+
+      function persistRanking() {
+        const normalizedName = state.player.trim().toLocaleLowerCase("pt-BR");
+        const run = {
+          name: state.player,
+          score: state.score,
+          correct: state.events.filter((event) => event.correct).length,
+          playedAt: new Date().toISOString()
+        };
+        const existingIndex = state.rankings.findIndex((entry) =>
+          entry.name.trim().toLocaleLowerCase("pt-BR") === normalizedName
+        );
+        const existing = existingIndex >= 0 ? state.rankings[existingIndex] : null;
+        if (!existing || run.score > existing.score ||
+          (run.score === existing.score && run.correct > existing.correct)) {
+          if (existingIndex >= 0) state.rankings.splice(existingIndex, 1);
+          state.rankings.push(run);
+        }
+
+        if (state.storageAvailable) {
+          try {
+            localStorage.setItem(RANKING_KEY, JSON.stringify(state.rankings));
+          } catch (error) {
+            state.storageAvailable = false;
+            setStorageStatus(`Não foi possível salvar o ranking neste navegador: ${error.message}`);
+          }
+        } else {
+          setStorageStatus("Ranking disponível apenas nesta sessão: o armazenamento do navegador está indisponível.");
+        }
+        return run;
+      }
+
+      function beginQuestion() {
+        const question = questions[state.current];
+        state.answered = false;
+        document.querySelector("#question-counter").textContent = `QUESTÃO ${String(state.current + 1).padStart(2, "0")} / ${questions.length}`;
+        document.querySelector("#question-title").textContent = question.title;
+        document.querySelector("#event-label").textContent = question.event;
+        document.querySelector("#route-progress").textContent = "🚚 Teresina → Parnaíba · 120 volumes · 15 entregas planejadas";
+        document.querySelector("#player-display").textContent = `👤 ${state.player} · ⭐ ${state.score.toLocaleString("pt-BR")} pontos`;
+        const grid = document.querySelector("#answer-grid");
+        grid.replaceChildren();
+        question.options.forEach((option, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = `answer ${answersStyle[index]}`;
+          button.innerHTML = `<span class="shape" aria-hidden="true">${answerShapes[index]}</span><span><span class="answer-label">OPÇÃO ${index + 1}</span></span>`;
+          button.lastElementChild.lastElementChild.textContent = option;
+          button.addEventListener("click", () => chooseAnswer(index));
+          grid.append(button);
+        });
+        document.querySelector("#feedback").classList.remove("visible");
+        document.querySelector("#next-button").hidden = true;
+      }
+
+      function chooseAnswer(index) {
+        if (state.answered) return;
+        state.answered = true;
+        const question = questions[state.current];
+        const isCorrect = index === question.correct;
+        const points = isCorrect ? 1000 : 0;
+        state.score += points;
+        state.events.push({ selected: index, correct: isCorrect, points });
+
+        [...document.querySelector("#answer-grid").children].forEach((button, buttonIndex) => {
+          button.disabled = true;
+          if (buttonIndex === question.correct) button.classList.add("correct");
+          else if (buttonIndex === index) button.classList.add("incorrect");
+        });
+
+        const title = document.querySelector("#feedback-title");
+        title.className = `feedback-title ${isCorrect ? "good" : "bad"}`;
+        title.textContent = isCorrect
+          ? `✓ Fluxo correto da solução logística! +${points.toLocaleString("pt-BR")} pontos`
+          : `✕ O fluxo esperado era a opção ${question.correct + 1}.`;
+        document.querySelector("#feedback-text").textContent = question.explanation;
+        document.querySelector("#feedback").classList.add("visible");
+        document.querySelector("#player-display").textContent = `👤 ${state.player} · ⭐ ${state.score.toLocaleString("pt-BR")} pontos`;
+        const next = document.querySelector("#next-button");
+        next.textContent = state.current === questions.length - 1 ? "Encerrar e ver relatório →" : "Próximo evento →";
+        next.hidden = false;
+        next.focus();
+      }
+
+      function renderReport(run) {
+        const correctCount = state.events.filter((event) => event.correct).length;
+        const accuracy = Math.round(correctCount / questions.length * 100);
+        const summaryItems = [
+          [String(correctCount), "fluxos corretos"],
+          [`${accuracy}%`, "aderência ao workflow"],
+          [state.score.toLocaleString("pt-BR"), "pontos conquistados"],
+          [String(questions.length), "eventos analisados"]
+        ];
+        const summary = document.querySelector("#report-summary");
+        summary.replaceChildren();
+        summaryItems.forEach(([value, label]) => {
+          const item = document.createElement("div");
+          item.className = "summary-item";
+          const strong = document.createElement("strong");
+          strong.textContent = value;
+          const caption = document.createElement("span");
+          caption.textContent = label;
+          item.append(strong, caption);
+          summary.append(item);
+        });
+
+        const report = document.querySelector("#report-events");
+        report.replaceChildren();
+        questions.forEach((question, index) => {
+          const result = state.events[index];
+          const card = document.createElement("article");
+          card.className = `report-event ${result.correct ? "good" : "bad"}`;
+          const heading = document.createElement("div");
+          heading.className = "report-event-head";
+          const title = document.createElement("h3");
+          title.textContent = question.event;
+          const outcome = document.createElement("span");
+          outcome.className = "report-outcome";
+          outcome.textContent = result.correct ? "WORKFLOW RECONHECIDO" : "PONTO DE APRENDIZADO";
+          heading.append(title, outcome);
+
+          const selected = result.selected < 0
+            ? "Nenhuma opção selecionada."
+            : `Opção ${result.selected + 1}: ${question.options[result.selected]}`;
+          const correct = `Opção ${question.correct + 1}: ${question.options[question.correct]}`;
+          const details = [
+            ["Sua decisão", selected],
+            ["Ação da solução logística", correct],
+            ["Análise de aprendizagem", question.explanation],
+            ["Foco de auditoria / indicador", question.measure]
+          ];
+          card.append(heading);
+          details.forEach(([label, text]) => {
+            const paragraph = document.createElement("p");
+            const strong = document.createElement("strong");
+            strong.textContent = `${label}: `;
+            paragraph.append(strong, document.createTextNode(text));
+            card.append(paragraph);
+          });
+          const learning = document.createElement("p");
+          const learningStrong = document.createElement("strong");
+          learningStrong.textContent = "Competência: ";
+          learning.append(learningStrong, document.createTextNode(question.learning));
+          card.append(learning);
+          report.append(card);
+        });
+
+        document.querySelector("#result-player").textContent = `Operador(a): ${state.player} · Rota LogTeresina`;
+        document.querySelector("#result-score").textContent = `${state.score.toLocaleString("pt-BR")} pontos`;
+        document.querySelector("#result-subtitle").textContent = `${correctCount} de ${questions.length} workflows identificados`;
+      }
+
+      function renderPodium() {
+        const target = document.querySelector("#podium");
+        target.replaceChildren();
+        const top = sortedRankings().slice(0, 3);
+        const ordered = [top[1], top[0], top[2]];
+        ordered.forEach((entry, index) => {
+          const card = document.createElement("div");
+          card.className = `podium-card ${index === 1 && entry ? "first" : ""}`;
+          if (!entry) {
+            card.innerHTML = `<div class="podium-medal">—</div><div class="podium-name">Aguardando piloto</div><div class="podium-points">—</div>`;
+            target.append(card);
+            return;
+          }
+          const medals = ["🥈", "🥇", "🥉"];
+          const medal = document.createElement("div");
+          medal.className = "podium-medal";
+          medal.textContent = medals[index];
+          const name = document.createElement("div");
+          name.className = "podium-name";
+          name.textContent = entry.name;
+          const points = document.createElement("div");
+          points.className = "podium-points";
+          points.textContent = `${entry.score.toLocaleString("pt-BR")} pts`;
+          card.append(medal, name, points);
+          target.append(card);
+        });
+      }
+
+      function finishGame() {
+        const run = persistRanking();
+        renderReport(run);
+        renderPodium();
+        renderRanking("#final-ranking", 10);
+        setScreen("results");
+      }
+
+      function startGame(name) {
+        state.player = name;
+        state.current = 0;
+        state.score = 0;
+        state.events = [];
+        document.querySelector("#form-error").textContent = "";
+        setScreen("game");
+        beginQuestion();
+      }
+
+      document.querySelector("#player-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name = document.querySelector("#player-name").value.trim();
+        if (!name) {
+          document.querySelector("#form-error").textContent = "Digite seu nome ou o nome da equipe para iniciar.";
+          document.querySelector("#player-name").focus();
+          return;
+        }
+        startGame(name.slice(0, 32));
+      });
+
+      document.querySelector("#presentation-button").addEventListener("click", () => {
+        setScreen("home");
+      });
+
+      document.querySelector("#dashboard-button").addEventListener("click", () => {
+        setScreen("dashboard");
+        document.querySelector("#player-name").focus({ preventScroll: true });
+      });
+
+      document.querySelector("#next-button").addEventListener("click", () => {
+        state.current += 1;
+        if (state.current === questions.length) finishGame();
+        else beginQuestion();
+      });
+
+      document.querySelector("#replay-button").addEventListener("click", () => startGame(state.player));
+      document.querySelector("#home-button").addEventListener("click", () => {
+        renderRanking("#home-ranking", 5);
+        setScreen("home");
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (!screens.game.classList.contains("active") || state.answered) return;
+        const index = Number(event.key) - 1;
+        if (Number.isInteger(index) && index >= 0 && index < questions[state.current].options.length) {
+          document.querySelector("#answer-grid").children[index].click();
+        }
+      });
+
+      state.rankings = loadRankings();
+      renderRanking("#home-ranking", 5);
+    </script>
+  </body>
+</html>
