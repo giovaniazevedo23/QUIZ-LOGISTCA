@@ -550,6 +550,7 @@
     <script>
       const RANKING_KEY = "general-route-ranking-v1";
       const SHEETS_URL_KEY = "general-apps-script-url-v1";
+      const DEFAULT_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3HqpN9pC5gF5xeYjYLy3dTRAsB0k3U8RFJChULSOlry_SiTi01z9LfI5zE5wZrUu9AQ/exec";
       const answersStyle = ["shape-red", "shape-blue", "shape-yellow", "shape-green"];
       const answerShapes = ["▲", "◆", "●", "■"];
       const questions = [
@@ -769,11 +770,10 @@
 
       function loadSavedAppsScriptUrl() {
         try {
-          const savedUrl = localStorage.getItem(SHEETS_URL_KEY);
-          if (!savedUrl) return;
+          const savedUrl = localStorage.getItem(SHEETS_URL_KEY) || DEFAULT_APPS_SCRIPT_URL;
           state.appsScriptUrl = validateAppsScriptUrl(savedUrl);
           document.querySelector("#apps-script-url").value = state.appsScriptUrl;
-          setSheetStatus("URL salva. Testando acesso à planilha compartilhada…");
+          setSheetStatus("Testando acesso à planilha compartilhada…");
           refreshSharedRanking()
             .then((response) => {
               startSharedRankingPolling();
@@ -782,7 +782,10 @@
             .catch((error) => {
               state.sharedRankings = null;
               document.querySelector("#ranking-source").textContent = "Ranking deste navegador";
-              setSheetStatus(`Falha ao conectar: ${error.message}`, "error");
+              setSheetStatus(
+                `Falha ao conectar: ${error.message} Verifique se o Web App está implantado com acesso “Qualquer pessoa”.`,
+                "error"
+              );
             });
         } catch (error) {
           setSheetStatus(`Não foi possível carregar a URL salva: ${error.message}`, "error");
@@ -1180,7 +1183,10 @@
         } catch (error) {
           state.sharedRankings = null;
           document.querySelector("#ranking-source").textContent = "Ranking deste navegador";
-          setSheetStatus(`Falha ao conectar: ${error.message}`, "error");
+          setSheetStatus(
+            `Falha ao conectar: ${error.message} Verifique se o Web App está implantado com acesso “Qualquer pessoa”.`,
+            "error"
+          );
         }
       });
 

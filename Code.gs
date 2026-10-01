@@ -17,6 +17,7 @@ const HEADERS = [
 const CORRECT_ANSWERS = ["B", "A", "B", "B", "A", "B"];
 const MAX_PLAYER_NAME_LENGTH = 32;
 const MAX_ATTEMPT_ID_LENGTH = 80;
+const SPREADSHEET_ID = "1o0PjO0bbXMbp9g3mMMAyClDownFPflgpiJFcF8gu9dM";
 
 function setup() {
   const sheet = getResponseSheet_();
@@ -197,11 +198,12 @@ function validateAttempt_(payload) {
 }
 
 function getResponseSheet_() {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  if (!spreadsheet) {
-    throw new Error("Abra este Apps Script pela planilha usando Extensões > Apps Script.");
+  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = spreadsheet.getSheets()[0];
+  if (!sheet) {
+    throw new Error("A planilha informada não contém nenhuma aba.");
   }
-  return spreadsheet.getSheets()[0];
+  return sheet;
 }
 
 function ensureHeaders_(sheet) {
